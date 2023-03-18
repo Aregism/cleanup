@@ -36,10 +36,12 @@ public class UserServiceImpl implements UserService {
 
     public void save(User user) throws DuplicateException, NotValidException {
         User fromDb = userRepository.findByEmail(user.getEmail());
-        if (user.getEmail().equals(fromDb.getEmail())) {
-            throw new DuplicateException(String.format("Duplicate email: %s", user.getEmail()));
-        } else if (user.getUsername().equals(fromDb.getUsername())) {
-            throw new DuplicateException(String.format("Duplicate username: %s", user.getUsername()));
+        if (fromDb != null){
+            if (user.getEmail().equals(fromDb.getEmail())) {
+                throw new DuplicateException(String.format("Duplicate email: %s", user.getEmail()));
+            } else if (user.getUsername().equals(fromDb.getUsername())) {
+                throw new DuplicateException(String.format("Duplicate username: %s", user.getUsername()));
+            }
         }
         validatePassword(user.getPassword());
         user.setPassword(passwordEncoder.encode(user.getPassword()));
@@ -195,7 +197,7 @@ public class UserServiceImpl implements UserService {
     private void validatePassword(String password) throws NotValidException {
         if (password.length() < 8){
             throw new NotValidException("Password must contain at least 8 characters.");
-        } else if (Pattern.matches(PASSWORD_REGEX, password)) {
+        } else if (!Pattern.matches(PASSWORD_REGEX, password)) {
             throw new NotValidException("Password must contain at least 8 characters, 1 uppercase, 1 lowercase and a number.\nAny other character is encouraged but not obligatory.");
         }
     }
