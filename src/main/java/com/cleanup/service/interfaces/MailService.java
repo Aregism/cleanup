@@ -9,5 +9,11 @@ public interface MailService {
     void sendWelcomeMessage(User recipient);
 
     @Async
-    void sendPasswordChangeToken(String to, int token);
+    void sendPasswordChangeToken(User recipient, long token);
+
+    @Async
+    void sendPasswordChangeConfirmation(User recipient);
+
+    @Async
+    void resendPasswordChangeToken(User user, long token);
 }

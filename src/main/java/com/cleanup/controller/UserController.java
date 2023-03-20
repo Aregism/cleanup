@@ -1,20 +1,20 @@
 package com.cleanup.controller;
 
 import com.cleanup.model.User;
+import com.cleanup.model.dto.PasswordChangeRequest;
 import com.cleanup.model.dto.UserRequest;
 import com.cleanup.service.interfaces.UserService;
 import com.cleanup.utility.exceptions.DuplicateException;
+import com.cleanup.utility.exceptions.NotFoundException;
 import com.cleanup.utility.exceptions.NotValidException;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/users")
-public class UserController {
+public class UserController extends BaseController {
 
     public UserController(UserService userService, ModelMapper userMapper) {
         this.userService = userService;
@@ -29,5 +29,18 @@ public class UserController {
         userService.save(userMapper.map(userRequest, User.class));
         return ResponseEntity.ok().build();
     }
+
+    @PostMapping("/pw-change-request")
+    public ResponseEntity<Void> requestPasswordChange(@RequestBody PasswordChangeRequest model) throws NotFoundException, NotValidException {
+        userService.requestPasswordChange(model);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/pw-confirm/{token}")
+    public ResponseEntity<Void> completePasswordChange(@PathVariable long token) throws NotValidException, NotFoundException {
+        userService.completePasswordChange(token);
+        return ResponseEntity.ok().build();
+    }
+
 
 }

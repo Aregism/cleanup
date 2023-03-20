@@ -20,6 +20,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findAll();
     List<User> findAllByIsSubscribed(boolean subscribed);
 
+    User findByToken(long token);
+
     void deleteById(long id);
     void deleteByIdIn(List<Long> ids);
 

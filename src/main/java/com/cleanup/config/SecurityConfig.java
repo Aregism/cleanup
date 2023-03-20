@@ -27,7 +27,14 @@ public class SecurityConfig{
         http
                 .csrf().disable()
                 .authorizeHttpRequests()
-                .requestMatchers(HttpMethod.POST, "/users/register").permitAll()
+                .requestMatchers(HttpMethod.GET,
+                        "/users/pw-confirm/**")
+                .permitAll()
+                .requestMatchers(HttpMethod.POST,
+                        "/users/register",
+                        "/users/pw-change-request"
+                        )
+                .permitAll()
                 .anyRequest()
                 .authenticated()
                 .and()

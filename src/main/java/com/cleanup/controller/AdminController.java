@@ -19,7 +19,7 @@ import static com.cleanup.utility.Constants.*;
 @RestController
 @RequestMapping("/admin")
 @RolesAllowed({ROLE_SUPERADMIN, ROLE_ADMIN})
-public class AdminController {
+public class AdminController extends BaseController {
 
     public AdminController(UserService userService, ModelMapper userMapper) {
         this.userService = userService;

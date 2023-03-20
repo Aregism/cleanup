@@ -4,6 +4,7 @@ import com.cleanup.config.CommandLineProperties;
 import com.cleanup.model.User;
 import com.cleanup.repository.TemplateRepository;
 import com.cleanup.service.interfaces.MailService;
+import com.cleanup.utility.Constants;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
 import org.springframework.mail.SimpleMailMessage;
@@ -31,41 +32,58 @@ public class MailServiceImpl implements MailService {
     private final TemplateRepository templateRepository;
     private final CommandLineProperties properties;
 
-    @Override
     public void sendWelcomeMessage(User recipient) {
-
-        SimpleMailMessage message = new SimpleMailMessage();
-        String template = templateRepository.findByName("Welcome").getBody();
-        Mustache mustache = mustacheFactory.compile(new StringReader(template), "Welcome");
-        StringWriter writer = new StringWriter();
         Map<String, Object> context = new HashMap<>();
         context.put("name", resolveRecipientName(recipient));
         context.put("adminEmail", properties.getEmail());
-        try {
-            mustache.execute(writer, context).flush();
-        } catch (IOException ignored) {
+        send(context, recipient.getEmail(), "Welcome");
+    }
 
-        }
-        String emailBody = writer.toString();
+    public void sendPasswordChangeToken(User recipient, long token) {
+        Map<String, Object> context = new HashMap<>();
+        context.put("name", resolveRecipientName(recipient));
+        context.put("token", token);
+        send(context, recipient.getEmail(), "PasswordChangeRequest");
+    }
 
-        message.setTo(recipient.getEmail());
-        message.setFrom(properties.getEmail());
-        message.setText(emailBody);
-        mailSender.send(message);
+    public void sendPasswordChangeConfirmation(User recipient) {
+        Map<String, Object> context = new HashMap<>();
+        context.put("name", resolveRecipientName(recipient));
+        context.put("adminEmail", properties.getEmail());
+        send(context, recipient.getEmail(), "PasswordChangeResponse");
     }
 
     @Override
-    public void sendPasswordChangeToken(String to, int token) {
-
+    public void resendPasswordChangeToken(User user, long generateToken) {
+        Map<String, Object> context = new HashMap<>();
+        context.put("name", resolveRecipientName(user));
+        context.put("adminEmail", properties.getEmail());
+        send(context, user.getEmail(), "PasswordChangeResend");
     }
 
     private String resolveRecipientName(User user) {
-        if (user.getUsername() != null) {
+        if (user.isCustomUsername()) {
             return user.getUsername();
         } else if (user.getFirstName() != null) {
             return user.getFirstName();
         } else {
             return user.getEmail();
         }
+    }
+
+    private void send(Map<String, Object> context, String to, String emailTemplateName) {
+        String template = templateRepository.findByName(emailTemplateName).getBody();
+        Mustache mustache = mustacheFactory.compile(new StringReader(template), emailTemplateName);
+        StringWriter writer = new StringWriter();
+        try {
+            mustache.execute(writer, context).flush();
+        } catch (IOException e) {
+            // TODO: 19-Mar-23 log here
+        }
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(to);
+        message.setFrom(properties.getEmail());
+        message.setText(writer.toString());
+        mailSender.send(message);
     }
 }

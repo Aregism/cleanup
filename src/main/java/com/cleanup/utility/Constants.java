@@ -38,6 +38,9 @@ public class Constants {
     // Regexes
     public static String PASSWORD_REGEX = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).+$";
 
+    // Logger constants
+    public static final String LOG_DIRECTORY = "target/logs";
+
     public static void setupAdmins(CommandLineProperties properties, PasswordEncoder passwordEncoder) {
         USER_SUPERADMIN.setUsername("superadmin");
         USER_SUPERADMIN.setEmail(properties.getEmail());

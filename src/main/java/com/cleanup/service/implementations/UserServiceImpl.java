@@ -1,6 +1,7 @@
 package com.cleanup.service.implementations;
 
 import com.cleanup.model.User;
+import com.cleanup.model.dto.PasswordChangeRequest;
 import com.cleanup.model.enums.AccountStatus;
 import com.cleanup.repository.UserRepository;
 import com.cleanup.service.interfaces.MailService;
@@ -13,10 +14,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import static com.cleanup.utility.Constants.ONE_HOUR;
 import static com.cleanup.utility.Constants.PASSWORD_REGEX;
 
 @Service
@@ -36,7 +39,7 @@ public class UserServiceImpl implements UserService {
 
     public void save(User user) throws DuplicateException, NotValidException {
         User fromDb = userRepository.findByEmail(user.getEmail());
-        if (fromDb != null){
+        if (fromDb != null) {
             if (user.getEmail().equals(fromDb.getEmail())) {
                 throw new DuplicateException(String.format("Duplicate email: %s", user.getEmail()));
             } else if (user.getUsername().equals(fromDb.getUsername())) {
@@ -178,24 +181,51 @@ public class UserServiceImpl implements UserService {
         userRepository.saveAll(users);
     }
 
+    @Override
+    public User findByToken(long token) {
+        return userRepository.findByToken(token);
+    }
+
     @Transactional
-    public void requestPasswordChange(String email) throws NotFoundException {
-        User user = findByEmail(email);
+    public void requestPasswordChange(PasswordChangeRequest model) throws NotFoundException, NotValidException {
+        User user = findByEmail(model.getEmail());
         if (user == null) {
-            throw new NotFoundException("User not found by email: " + email);
+            throw new NotFoundException("User not found by email: " + model.getEmail());
+        } else if (passwordEncoder.matches(model.getNewPassword1(), user.getPassword())) {
+            throw new NotValidException("New password can not match with the old one.");
+        } else if (!model.getNewPassword1().equals(model.getNewPassword2())) {
+            throw new NotValidException("The 2 passwords didn't match.");
+        } else {
+            validatePassword(model.getNewPassword1());
         }
+        user.setPasswordToBeSet(passwordEncoder.encode(model.getNewPassword1()));
         user.setToken(userServiceHelper.generateToken());
         user.setTokenGeneratedDate(LocalDateTime.now());
-        // TODO: 16-Mar-23 Notify the user here
+        mailService.sendPasswordChangeToken(user, user.getToken());
         userRepository.save(user);
     }
 
-    public void completePasswordChange() {
-
+    @Transactional(noRollbackFor = {NotValidException.class})
+    public void completePasswordChange(long token) throws NotValidException, NotFoundException {
+        User user = findByToken(token);
+        if (user == null) {
+            throw new NotFoundException("User not found with token: " + token);
+        } else if (LocalDateTime.now().isAfter(user.getTokenGeneratedDate().plus(Duration.ofHours(ONE_HOUR)))) {
+            long newToken = userServiceHelper.generateToken();
+            user.setToken(newToken);
+            user.setTokenGeneratedDate(LocalDateTime.now());
+            mailService.resendPasswordChangeToken(user, newToken);
+            userRepository.save(user);
+            throw new NotValidException("Password change token timed out.");
+        } else {
+            mailService.sendPasswordChangeConfirmation(user);
+            userServiceHelper.setupPasswordChangeUser(user);
+            userRepository.save(user);
+        }
     }
 
     private void validatePassword(String password) throws NotValidException {
-        if (password.length() < 8){
+        if (password.length() < 8) {
             throw new NotValidException("Password must contain at least 8 characters.");
         } else if (!Pattern.matches(PASSWORD_REGEX, password)) {
             throw new NotValidException("Password must contain at least 8 characters, 1 uppercase, 1 lowercase and a number.\nAny other character is encouraged but not obligatory.");

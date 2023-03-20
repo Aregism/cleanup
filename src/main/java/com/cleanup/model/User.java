@@ -61,13 +61,19 @@ public class User {
     private LocalDateTime verificationDate;
 
     @Column(name = "Token")
-    private long token;
+    private Long token;
 
     @Column
     private LocalDateTime tokenGeneratedDate;
 
     @Column(name = "LatestLogin")
     private LocalDateTime latestLogin;
+
+    @Column(name = "PasswordToBeSet")
+    private String passwordToBeSet;
+
+    @Column(name = "PasswordChangeDate")
+    private LocalDateTime passwordChangeDate;
 
     @Column(name = "FailedLoginAttempts")
     private byte failedLoginAttempts;

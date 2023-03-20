@@ -2,7 +2,6 @@ package com.cleanup.utility;
 
 import com.cleanup.config.CommandLineProperties;
 import com.cleanup.model.MailTemplate;
-import com.cleanup.model.User;
 import com.cleanup.repository.AuthorityRepository;
 import com.cleanup.repository.TemplateRepository;
 import com.cleanup.repository.UserRepository;

@@ -1,6 +1,7 @@
 package com.cleanup.service.interfaces;
 
 import com.cleanup.model.User;
+import com.cleanup.model.dto.PasswordChangeRequest;
 import com.cleanup.utility.exceptions.DuplicateException;
 import com.cleanup.utility.exceptions.NotFoundException;
 import com.cleanup.utility.exceptions.NotValidException;
@@ -53,8 +54,10 @@ public interface UserService {
 
     void unbanByEmailBulk(List<String> emails);
 
-    void requestPasswordChange(String email) throws NotFoundException;
+    User findByToken(long token);
 
-    void completePasswordChange();
+    void requestPasswordChange(PasswordChangeRequest model) throws NotFoundException, NotValidException;
+
+    void completePasswordChange(long token) throws NotValidException, NotFoundException;
 
 }
