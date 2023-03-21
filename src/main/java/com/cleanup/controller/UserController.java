@@ -7,7 +7,6 @@ import com.cleanup.service.interfaces.UserService;
 import com.cleanup.utility.exceptions.DuplicateException;
 import com.cleanup.utility.exceptions.NotFoundException;
 import com.cleanup.utility.exceptions.NotValidException;
-import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

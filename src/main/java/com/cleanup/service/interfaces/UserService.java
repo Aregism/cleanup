@@ -36,23 +36,23 @@ public interface UserService {
 
     void softDeleteById(int id);
 
-    void softDeleteById(List<Long> ids);
+    void softDeleteById(List<Long> ids) throws NotFoundException;
 
     void banById(int id);
 
-    void banByIdBulk(List<Long> ids);
+    void banByIdBulk(List<Long> ids) throws NotFoundException;
 
     void banByEmail(String email);
 
-    void banByEmailBulk(List<String> emails);
+    void banByEmailBulk(List<String> emails) throws NotFoundException;
 
     void unbanById(int id);
 
-    void unbanByIdBulk(List<Long> ids);
+    void unbanByIdBulk(List<Long> ids) throws NotFoundException;
 
     void unbanByEmail(String email);
 
-    void unbanByEmailBulk(List<String> emails);
+    void unbanByEmailBulk(List<String> emails) throws NotFoundException;
 
     User findByToken(long token);
 

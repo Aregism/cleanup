@@ -10,6 +10,7 @@ import com.cleanup.utility.exceptions.DuplicateException;
 import com.cleanup.utility.exceptions.NotFoundException;
 import com.cleanup.utility.exceptions.NotValidException;
 import com.cleanup.utility.helpers.UserServiceHelper;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +23,7 @@ import java.util.regex.Pattern;
 import static com.cleanup.utility.Constants.ONE_HOUR;
 import static com.cleanup.utility.Constants.PASSWORD_REGEX;
 
+@Log4j2
 @Service
 public class UserServiceImpl implements UserService {
 
@@ -38,14 +40,7 @@ public class UserServiceImpl implements UserService {
     private final MailService mailService;
 
     public void save(User user) throws DuplicateException, NotValidException {
-        User fromDb = userRepository.findByEmail(user.getEmail());
-        if (fromDb != null) {
-            if (user.getEmail().equals(fromDb.getEmail())) {
-                throw new DuplicateException(String.format("Duplicate email: %s", user.getEmail()));
-            } else if (user.getUsername().equals(fromDb.getUsername())) {
-                throw new DuplicateException(String.format("Duplicate username: %s", user.getUsername()));
-            }
-        }
+        validateEmailAndUsername(user.getEmail(), user.getUsername());
         validatePassword(user.getPassword());
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         if (user.getUsername() == null) {
@@ -55,14 +50,19 @@ public class UserServiceImpl implements UserService {
         }
         mailService.sendWelcomeMessage(user);
         userRepository.save(user);
+        log.info("User created " + user.getEmail());
     }
 
     @Transactional
     public void saveBulk(List<User> users) throws DuplicateException {
         List<User> fromDb = findByEmailBulk(users.stream().map(User::getEmail).toList());
         List<String> emails = fromDb.stream().map(User::getEmail).toList();
-        if (!fromDb.isEmpty()) throw new DuplicateException(String.format("Duplicate emails found: %s", emails));
+        if (!fromDb.isEmpty()) {
+            log.error("Duplicate emails found. No users were saved.");
+            throw new DuplicateException(String.format("Duplicate emails found: %s", emails));
+        }
         userRepository.saveAll(users);
+        log.info("All users successfully saved.");
     }
 
     public User findById(long id) {
@@ -110,75 +110,105 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(id);
         user.setAccountStatus(AccountStatus.DELETED);
         userRepository.save(user);
+        log.info("User 'soft' deleted: " + id);
     }
 
     @Transactional
-    public void softDeleteById(List<Long> ids) {
+    public void softDeleteById(List<Long> ids) throws NotFoundException {
         List<User> users = userRepository.findByIdIn(ids);
+        if (users.size() < ids.size()) {
+            log.error("Some of the users were not found. Did not update any users.");
+            throw new NotFoundException("Some of the users were not found. Did not update any users.");
+        }
         for (User user : users) {
             user.setAccountStatus(AccountStatus.DELETED);
         }
         userRepository.saveAll(users);
+        log.info("Users 'soft' deleted: " + ids);
     }
 
     public void banById(int id) {
         User user = userRepository.findById(id);
         user.setBanned(true);
         userRepository.save(user);
+        log.info("User banned: " + id);
     }
 
     @Transactional
-    public void banByIdBulk(List<Long> ids) {
+    public void banByIdBulk(List<Long> ids) throws NotFoundException {
         List<User> users = userRepository.findByIdIn(ids);
+        if (users.size() < ids.size()) {
+            log.error("Some of the users were not found. Did not update any users.");
+            throw new NotFoundException("Some of the users were not found. Did not update any users.");
+        }
         for (User user : users) {
             user.setBanned(true);
         }
         userRepository.saveAll(users);
+        log.info("Users banned: " + ids);
     }
 
     public void banByEmail(String email) {
         User user = userRepository.findByEmail(email);
         user.setBanned(true);
         userRepository.save(user);
+        log.info("User banned: " + email);
     }
 
     @Transactional
-    public void banByEmailBulk(List<String> emails) {
+    public void banByEmailBulk(List<String> emails) throws NotFoundException {
         List<User> users = userRepository.findByEmailIn(emails);
+        if (users.size() < emails.size()) {
+            log.error("Some of the users were not found. Did not update any users.");
+            throw new NotFoundException("Some of the users were not found. Did not update any users.");
+        }
         for (User user : users) {
             user.setBanned(true);
         }
         userRepository.saveAll(users);
+        log.info("Users banned: " + emails);
     }
 
     public void unbanById(int id) {
+        log.info("User unbanned: " + id);
         User user = userRepository.findById(id);
         user.setBanned(false);
         userRepository.save(user);
     }
 
     @Transactional
-    public void unbanByIdBulk(List<Long> ids) {
+    public void unbanByIdBulk(List<Long> ids) throws NotFoundException {
         List<User> users = userRepository.findByIdIn(ids);
+        if (users.size() < ids.size()) {
+            log.error("Some of the users were not found. Did not update any users.");
+            throw new NotFoundException("Some of the users were not found. Did not update any users.");
+        }
         for (User user : users) {
             user.setBanned(false);
         }
         userRepository.saveAll(users);
+        log.info("Users unbanned: " + ids);
     }
 
     public void unbanByEmail(String email) {
         User user = userRepository.findByEmail(email);
         user.setBanned(false);
         userRepository.save(user);
+        log.info("User unbanned: " + email);
     }
 
     @Transactional
-    public void unbanByEmailBulk(List<String> emails) {
+    public void unbanByEmailBulk(List<String> emails) throws NotFoundException {
         List<User> users = userRepository.findByEmailIn(emails);
+        if (users.size() < emails.size()) {
+            log.error("Some of the users were not found. Did not update any users.");
+            throw new NotFoundException("Some of the users were not found. Did not update any users.");
+        }
         for (User user : users) {
             user.setBanned(false);
         }
         userRepository.saveAll(users);
+        log.info("Users unbanned: " + emails);
     }
 
     @Override
@@ -229,6 +259,17 @@ public class UserServiceImpl implements UserService {
             throw new NotValidException("Password must contain at least 8 characters.");
         } else if (!Pattern.matches(PASSWORD_REGEX, password)) {
             throw new NotValidException("Password must contain at least 8 characters, 1 uppercase, 1 lowercase and a number.\nAny other character is encouraged but not obligatory.");
+        }
+    }
+
+    private void validateEmailAndUsername(String email, String username) throws DuplicateException {
+        if (findByEmail(email) != null) {
+            log.error("Duplicate email.");
+            throw new DuplicateException("Email already exists. Please enter another email or recover your account.");
+        }
+        if (findByUsername(username) != null) {
+            log.error("Duplicate username.");
+            throw new DuplicateException("Username already exists.");
         }
     }
 }

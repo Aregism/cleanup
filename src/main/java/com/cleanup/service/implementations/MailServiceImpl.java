@@ -7,8 +7,11 @@ import com.cleanup.service.interfaces.MailService;
 import com.cleanup.utility.Constants;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
-import org.springframework.mail.SimpleMailMessage;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -17,6 +20,7 @@ import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
 
+@Log4j2
 @Service
 public class MailServiceImpl implements MailService {
 
@@ -36,29 +40,28 @@ public class MailServiceImpl implements MailService {
         Map<String, Object> context = new HashMap<>();
         context.put("name", resolveRecipientName(recipient));
         context.put("adminEmail", properties.getEmail());
-        send(context, recipient.getEmail(), "Welcome");
+        send(context, recipient.getEmail(), "Welcome", "Welcome");
     }
 
     public void sendPasswordChangeToken(User recipient, long token) {
         Map<String, Object> context = new HashMap<>();
         context.put("name", resolveRecipientName(recipient));
-        context.put("token", token);
-        send(context, recipient.getEmail(), "PasswordChangeRequest");
+        context.put("link", Constants.BASE_URL + "/users/pw-confirm/" + token);
+        send(context, recipient.getEmail(), "Password change link", "PasswordChangeRequest");
     }
 
     public void sendPasswordChangeConfirmation(User recipient) {
         Map<String, Object> context = new HashMap<>();
         context.put("name", resolveRecipientName(recipient));
         context.put("adminEmail", properties.getEmail());
-        send(context, recipient.getEmail(), "PasswordChangeResponse");
+        send(context, recipient.getEmail(), "Confirm password change", "PasswordChangeResponse");
     }
 
-    @Override
-    public void resendPasswordChangeToken(User user, long generateToken) {
+    public void resendPasswordChangeToken(User user, long token) {
         Map<String, Object> context = new HashMap<>();
         context.put("name", resolveRecipientName(user));
-        context.put("adminEmail", properties.getEmail());
-        send(context, user.getEmail(), "PasswordChangeResend");
+        context.put("link", Constants.BASE_URL + "/users/pw-confirm/" + token);
+        send(context, user.getEmail(), "Your new link", "PasswordChangeResend");
     }
 
     private String resolveRecipientName(User user) {
@@ -71,19 +74,27 @@ public class MailServiceImpl implements MailService {
         }
     }
 
-    private void send(Map<String, Object> context, String to, String emailTemplateName) {
+    private void send(Map<String, Object> context, String to, String subject, String emailTemplateName) {
         String template = templateRepository.findByName(emailTemplateName).getBody();
         Mustache mustache = mustacheFactory.compile(new StringReader(template), emailTemplateName);
         StringWriter writer = new StringWriter();
         try {
             mustache.execute(writer, context).flush();
         } catch (IOException e) {
-            // TODO: 19-Mar-23 log here
+            log.error("Could not create mustache template.");
         }
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(to);
-        message.setFrom(properties.getEmail());
-        message.setText(writer.toString());
-        mailSender.send(message);
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, "utf-8");
+        try {
+            helper.setTo(to);
+            helper.setFrom(properties.getEmail());
+            helper.setSubject(subject);
+            helper.setText(writer.toString(), true);
+            mailSender.send(message);
+            log.info("Email successfully sent. Subject: " + message.getSubject());
+        } catch (MessagingException e) {
+            log.fatal("Could not send email.");
+        }
+
     }
 }

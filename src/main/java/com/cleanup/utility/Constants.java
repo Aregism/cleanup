@@ -41,6 +41,9 @@ public class Constants {
     // Logger constants
     public static final String LOG_DIRECTORY = "target/logs";
 
+    // Other
+    public static final String BASE_URL = "http://localhost:8080";
+
     public static void setupAdmins(CommandLineProperties properties, PasswordEncoder passwordEncoder) {
         USER_SUPERADMIN.setUsername("superadmin");
         USER_SUPERADMIN.setEmail(properties.getEmail());
