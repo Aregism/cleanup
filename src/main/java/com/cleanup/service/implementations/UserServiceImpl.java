@@ -101,7 +101,7 @@ public class UserServiceImpl implements UserService {
         return userRepository.findAllByIsSubscribed(subscribed);
     }
 
-    public void deleteById(int id) {
+    public void deleteById(long id) {
         userRepository.deleteById(id);
     }
 
@@ -110,7 +110,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Transactional
-    public void softDeleteById(int id) {
+    public void softDeleteById(long id) {
         User user = userRepository.findById(id);
         user.setAccountStatus(AccountStatus.DELETED);
         userRepository.save(user);
@@ -118,101 +118,16 @@ public class UserServiceImpl implements UserService {
     }
 
     @Transactional
-    public void softDeleteById(List<Long> ids) throws NotFoundException {
+    public void softDeleteById(List<Long> ids) {
         List<User> users = userRepository.findByIdIn(ids);
         if (users.size() < ids.size()) {
-            log.error("Some of the users were not found. Did not update any users.");
-            throw new NotFoundException("Some of the users were not found. Did not update any users.");
+            log.warn("Some of the users were not found.");
         }
         for (User user : users) {
             user.setAccountStatus(AccountStatus.DELETED);
         }
         userRepository.saveAll(users);
         log.info("Users 'soft' deleted: " + ids);
-    }
-
-    public void banById(int id) {
-        User user = userRepository.findById(id);
-        user.setBanned(true);
-        userRepository.save(user);
-        log.info("User banned: " + id);
-    }
-
-    @Transactional
-    public void banByIdBulk(List<Long> ids) throws NotFoundException {
-        List<User> users = userRepository.findByIdIn(ids);
-        if (users.size() < ids.size()) {
-            log.error("Some of the users were not found. Did not update any users.");
-            throw new NotFoundException("Some of the users were not found. Did not update any users.");
-        }
-        for (User user : users) {
-            user.setBanned(true);
-        }
-        userRepository.saveAll(users);
-        log.info("Users banned: " + ids);
-    }
-
-    public void banByEmail(String email) {
-        User user = userRepository.findByEmail(email);
-        user.setBanned(true);
-        userRepository.save(user);
-        log.info("User banned: " + email);
-    }
-
-    @Transactional
-    public void banByEmailBulk(List<String> emails) throws NotFoundException {
-        List<User> users = userRepository.findByEmailIn(emails);
-        if (users.size() < emails.size()) {
-            log.error("Some of the users were not found. Did not update any users.");
-            throw new NotFoundException("Some of the users were not found. Did not update any users.");
-        }
-        for (User user : users) {
-            user.setBanned(true);
-        }
-        userRepository.saveAll(users);
-        log.info("Users banned: " + emails);
-    }
-
-    public void unbanById(int id) {
-        log.info("User unbanned: " + id);
-        User user = userRepository.findById(id);
-        user.setBanned(false);
-        userRepository.save(user);
-    }
-
-    @Transactional
-    public void unbanByIdBulk(List<Long> ids) throws NotFoundException {
-        List<User> users = userRepository.findByIdIn(ids);
-        if (users.size() < ids.size()) {
-            log.error("Some of the users were not found. Did not update any users.");
-            throw new NotFoundException("Some of the users were not found. Did not update any users.");
-        }
-        for (User user : users) {
-            user.setBanned(false);
-        }
-        userRepository.saveAll(users);
-        log.info("Users unbanned: " + ids);
-    }
-
-    public void unbanByEmail(String email) {
-        User user = userRepository.findByEmail(email);
-        user.setBanned(false);
-        userRepository.save(user);
-        log.info("User unbanned: " + email);
-    }
-
-    @Transactional
-    public void unbanByEmailBulk(List<String> emails) throws NotFoundException {
-        List<User> users = userRepository.findByEmailIn(emails);
-        if (users.size() < emails.size()) {
-            log.error("Some of the users were not found. Did not update any users.");
-            throw new NotFoundException("Some of the users were not found. Did not update any users.");
-        }
-        for (User user : users) {
-            user.setBanned(false);
-        }
-        userRepository.saveAll(users);
-        log.info("Users unbanned: " + emails);
     }
 
     @Override
@@ -261,7 +176,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Transactional(noRollbackFor = NotValidException.class)
-    public void requestVerification(long token) throws NotFoundException, NotValidException {
+    public void verify(long token) throws NotFoundException, NotValidException {
         User user = findByToken(token);
         if (user == null) {
             throw new NotFoundException("User not found with token: " + token);
@@ -275,6 +190,39 @@ public class UserServiceImpl implements UserService {
         } else {
             modifyAccountStatus(user, AccountStatus.VERIFIED);
         }
+    }
+
+    public void updateBannedById(long id, boolean status) {
+        User user = userRepository.findById(id);
+        user.setBanned(status);
+        userRepository.save(user);
+        log.info("User banned: " + id);
+    }
+
+    @Transactional
+    public void updateBannedByIdBulk(List<Long> ids, boolean status) {
+        List<User> users = userRepository.findByIdIn(ids);
+        if (users.size() < ids.size()) {
+            log.warn("Some of the users were not found.");
+        }
+        for (User user : users) {
+            user.setBanned(status);
+        }
+        userRepository.saveAll(users);
+        log.info(status ? "Users unbanned: " + ids : "Users banned: " + ids);
+    }
+
+    @Transactional
+    public void updateBannedByEmailBulk(List<String> emails, boolean status) {
+        List<User> users = userRepository.findByEmailIn(emails);
+        if (users.size() < emails.size()) {
+            log.warn("Some of the users were not found.");
+        }
+        for (User user : users) {
+            user.setBanned(status);
+        }
+        userRepository.saveAll(users);
+        log.info(status ? "Users unbanned: " + emails : "Users banned: " + emails);
     }
 
     private void validatePassword(String password) throws NotValidException {

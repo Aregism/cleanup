@@ -43,7 +43,7 @@ public class UserController extends BaseController {
 
     @GetMapping("/verify/{token}")
     public ResponseEntity<Void> verify(@PathVariable long token) throws NotValidException, NotFoundException {
-        userService.requestVerification(token);
+        userService.verify(token);
         return ResponseEntity.ok().build();
     }
 

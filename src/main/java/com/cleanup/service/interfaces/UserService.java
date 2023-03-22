@@ -25,34 +25,18 @@ public interface UserService {
     List<User> findAll();
 
     User findByUsername(String username);
-    
+
     List<User> findByUsernameBulk(List<String> usernames);
-    
+
     List<User> findAllSubscribed(boolean subscribed);
 
-    void deleteById(int id);
+    void deleteById(long id);
 
     void deleteByIdBulk(List<Long> ids);
 
-    void softDeleteById(int id);
+    void softDeleteById(long id);
 
-    void softDeleteById(List<Long> ids) throws NotFoundException;
-
-    void banById(int id);
-
-    void banByIdBulk(List<Long> ids) throws NotFoundException;
-
-    void banByEmail(String email);
-
-    void banByEmailBulk(List<String> emails) throws NotFoundException;
-
-    void unbanById(int id);
-
-    void unbanByIdBulk(List<Long> ids) throws NotFoundException;
-
-    void unbanByEmail(String email);
-
-    void unbanByEmailBulk(List<String> emails) throws NotFoundException;
+    void softDeleteById(List<Long> ids);
 
     User findByToken(long token);
 
@@ -60,5 +44,11 @@ public interface UserService {
 
     void completePasswordChange(long token) throws NotValidException, NotFoundException;
 
-    void requestVerification(long token) throws NotFoundException, NotValidException;
+    void verify(long token) throws NotFoundException, NotValidException;
+
+    void updateBannedById(long id, boolean status);
+
+    void updateBannedByIdBulk(List<Long> ids, boolean status) throws NotFoundException;
+
+    void updateBannedByEmailBulk(List<String> emails, boolean status);
 }
