@@ -20,8 +20,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import static com.cleanup.utility.Constants.ONE_HOUR;
-import static com.cleanup.utility.Constants.PASSWORD_REGEX;
+import static com.cleanup.utility.Constants.*;
 
 @Log4j2
 @Service
@@ -49,6 +48,7 @@ public class UserServiceImpl implements UserService {
             user.setCustomUsername(true);
         }
         mailService.sendWelcomeMessage(user);
+        mailService.sendAccountVerification(user, userServiceHelper.generateToken());
         userRepository.save(user);
         log.info("User created " + user.getEmail());
     }
@@ -61,6 +61,10 @@ public class UserServiceImpl implements UserService {
             log.error("Duplicate emails found. No users were saved.");
             throw new DuplicateException(String.format("Duplicate emails found: %s", emails));
         }
+        users.stream()
+                .peek(mailService::sendWelcomeMessage)
+                .filter(user -> user.getAccountStatus() == AccountStatus.UNVERIFIED)
+                .forEach(user -> mailService.sendAccountVerification(user, userServiceHelper.generateToken()));
         userRepository.saveAll(users);
         log.info("All users successfully saved.");
     }
@@ -221,6 +225,8 @@ public class UserServiceImpl implements UserService {
         User user = findByEmail(model.getEmail());
         if (user == null) {
             throw new NotFoundException("User not found by email: " + model.getEmail());
+        } else if (user.getAccountStatus() != AccountStatus.VERIFIED) {
+            throw new NotValidException("Please verify your account before changing password.");
         } else if (passwordEncoder.matches(model.getNewPassword1(), user.getPassword())) {
             throw new NotValidException("New password can not match with the old one.");
         } else if (!model.getNewPassword1().equals(model.getNewPassword2())) {
@@ -254,6 +260,23 @@ public class UserServiceImpl implements UserService {
         }
     }
 
+    @Transactional(noRollbackFor = NotValidException.class)
+    public void requestVerification(long token) throws NotFoundException, NotValidException {
+        User user = findByToken(token);
+        if (user == null) {
+            throw new NotFoundException("User not found with token: " + token);
+        } else if (LocalDateTime.now().isAfter(user.getTokenGeneratedDate().plus(Duration.ofHours(ONE_HOUR)))) {
+            long newToken = userServiceHelper.generateToken();
+            user.setToken(newToken);
+            user.setTokenGeneratedDate(LocalDateTime.now());
+            mailService.resendAccountVerification(user, newToken);
+            userRepository.save(user);
+            throw new NotValidException("Account verification token timed out.");
+        } else {
+            modifyAccountStatus(user, AccountStatus.VERIFIED);
+        }
+    }
+
     private void validatePassword(String password) throws NotValidException {
         if (password.length() < 8) {
             throw new NotValidException("Password must contain at least 8 characters.");
@@ -262,7 +285,11 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    private void validateEmailAndUsername(String email, String username) throws DuplicateException {
+    private void validateEmailAndUsername(String email, String username) throws DuplicateException, NotValidException {
+        if (!email.matches(EMAIL_REGEX)) {
+            log.error("Invalid email: " + email);
+            throw new NotValidException("Invalid email. Did not match regex");
+        }
         if (findByEmail(email) != null) {
             log.error("Duplicate email.");
             throw new DuplicateException("Email already exists. Please enter another email or recover your account.");
@@ -271,5 +298,10 @@ public class UserServiceImpl implements UserService {
             log.error("Duplicate username.");
             throw new DuplicateException("Username already exists.");
         }
+    }
+
+    private void modifyAccountStatus(User user, AccountStatus newStatus) {
+        user.setAccountStatus(newStatus);
+        userRepository.save(user);
     }
 }

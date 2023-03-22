@@ -16,4 +16,10 @@ public interface MailService {
 
     @Async
     void resendPasswordChangeToken(User user, long token);
+
+    @Async
+    void sendAccountVerification(User user, long token);
+
+    @Async
+    void resendAccountVerification(User user, long token);
 }

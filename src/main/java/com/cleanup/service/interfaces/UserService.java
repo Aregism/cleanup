@@ -60,4 +60,5 @@ public interface UserService {
 
     void completePasswordChange(long token) throws NotValidException, NotFoundException;
 
+    void requestVerification(long token) throws NotFoundException, NotValidException;
 }

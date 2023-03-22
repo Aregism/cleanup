@@ -64,6 +64,17 @@ public class MailServiceImpl implements MailService {
         send(context, user.getEmail(), "Your new link", "PasswordChangeResend");
     }
 
+    public void sendAccountVerification(User user, long token) {
+        Map<String, Object> context = new HashMap<>();
+        context.put("name", resolveRecipientName(user));
+        context.put("link", Constants.BASE_URL + "/users/verify/" + token);
+        send(context, user.getEmail(), "Account verification", "AccountVerification");
+    }
+
+    public void resendAccountVerification(User user, long token) {
+
+    }
+
     private String resolveRecipientName(User user) {
         if (user.isCustomUsername()) {
             return user.getUsername();

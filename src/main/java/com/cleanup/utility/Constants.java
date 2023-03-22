@@ -36,6 +36,7 @@ public class Constants {
     public static Set<User> ALL_ADMINS = new HashSet<>();
 
     // Regexes
+    public static String EMAIL_REGEX = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
     public static String PASSWORD_REGEX = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).+$";
 
     // Logger constants
