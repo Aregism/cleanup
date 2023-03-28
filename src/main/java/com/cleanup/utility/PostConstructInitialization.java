@@ -44,7 +44,7 @@ public class PostConstructInitialization {
             setupAdmins(properties, passwordEncoder);
             userRepository.saveAll(ALL_ADMINS);
 
-        File folder = new File("src/main/resources/templates");
+        File folder = new File("src/main/resources/templates/email");
         File[] files = folder.listFiles();
         List<MailTemplate> templates = new ArrayList<>();
         MailTemplate template;

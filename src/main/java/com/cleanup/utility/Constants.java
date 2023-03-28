@@ -39,8 +39,9 @@ public class Constants {
     public static String EMAIL_REGEX = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
     public static String PASSWORD_REGEX = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).+$";
 
-    // Logger constants
+    // Directory constants
     public static final String LOG_DIRECTORY = "target/logs";
+    public static final String VIEW_DIRECTORY = "templates/views";
 
     // Other
     public static final String BASE_URL = "http://localhost:8080";
