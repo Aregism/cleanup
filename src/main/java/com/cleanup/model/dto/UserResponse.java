@@ -8,7 +8,7 @@ import lombok.Setter;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Set;
+import java.util.List;
 
 @Getter
 @Setter
@@ -30,8 +30,6 @@ public class UserResponse {
 
     private LocalDate dateOfBirth;
 
-    private boolean isSubscribe;
-
     private LocalDateTime registrationDate;
 
     private LocalDateTime verificationDate;
@@ -52,5 +50,5 @@ public class UserResponse {
 
     private boolean isSubscribed;
 
-    private Set<Authority> authorities;
+    private List<Authority> authorities;
 }
