@@ -1,0 +1,70 @@
+<div style="background-color: #004266; color: #FFFFFF; padding: 5px;">
+    <h1>Users: {{{filter}}}</h1>
+    <style>
+        table {
+            color: #FFFFFF;
+            font-size: 20px;
+            table-layout: fixed;
+            width: 100%;
+        }
+
+        th {
+            text-align: center;
+            padding: 5px;
+        }
+
+        td {
+            text-align: center;
+        }
+        a {
+            color: #FFFFFF;
+        }
+        input[type=checkbox] {
+            width: 20px;
+            height: 20px;
+        }
+    </style>
+    <table>
+        <col style="width:5%">
+        <col style="width:10%">
+        <col style="width:10%">
+        <col style="width:10%">
+        <col style="width:15%">
+        <col style="width:10%">
+        <col style="width:10%">
+        <col style="width:10%">
+        <col style="width:10%">
+        <col style="width:10%">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Account Status</th>
+            <th>Account Locked</th>
+            <th>Banned</th>
+            <th>Subscribed</th>
+            <th>Authorities</th>
+        </tr>
+        </thead>
+        <tbody>
+        {{#responses}}
+
+                <tr>
+                    <td><a href="{{{link}}}/{{{id}}}">{{{id}}}</a></td>
+                    <td>{{{firstName}}}</td>
+                    <td>{{{lastName}}}</td>
+                    <td>{{{username}}}</td>
+                    <td>{{{email}}}</td>
+                    <td>{{{accountStatus}}}</td>
+                    <td><input type="checkbox" disabled {{#isAccountLocked}}checked{{/isAccountLocked}}></td>
+                    <td><input type="checkbox" disabled {{#isBanned}}checked{{/isBanned}}></td>
+                    <td><input type="checkbox" disabled {{#isSubscribed}}checked{{/isSubscribed}}></td>
+                    <td>Inspect for details</td>
+                </tr>
+        {{/responses}}
+        </tbody>
+    </table>
+</div>
