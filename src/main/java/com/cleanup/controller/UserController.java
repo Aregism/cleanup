@@ -7,6 +7,7 @@ import com.cleanup.service.interfaces.UserService;
 import com.cleanup.utility.exceptions.DuplicateException;
 import com.cleanup.utility.exceptions.NotFoundException;
 import com.cleanup.utility.exceptions.NotValidException;
+import com.cleanup.utility.helpers.MustacheHelper;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,13 +16,15 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/users")
 public class UserController extends BaseController {
 
-    public UserController(UserService userService, ModelMapper userMapper) {
+    public UserController(UserService userService, ModelMapper userMapper, MustacheHelper mustache) {
         this.userService = userService;
         this.userMapper = userMapper;
+        this.mustache = mustache;
     }
 
     private final ModelMapper userMapper;
     private final UserService userService;
+    private final MustacheHelper mustache;
 
     @PostMapping("/register")
     public ResponseEntity<Void> register(@RequestBody UserRequest userRequest) throws DuplicateException, NotValidException {
