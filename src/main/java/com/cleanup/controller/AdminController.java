@@ -54,7 +54,7 @@ public class AdminController extends BaseController {
                 .collect(Collectors.toList());
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.TEXT_HTML);
-        String html = mustache.compileMultipleUsers("MultipleUsers", result, "all");
+        String html = mustache.compileMultipleUsers(result, "all");
         return new ResponseEntity<>(html, headers, HttpStatus.OK);
     }
 
@@ -65,7 +65,7 @@ public class AdminController extends BaseController {
         UserResponse model = userMapper.map(user, UserResponse.class);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.TEXT_HTML);
-        String html = mustache.compileSingleUser("SingleUser", model);
+        String html = mustache.compileSingleUser(model);
         return new ResponseEntity<>(html, headers, HttpStatus.OK);
     }
 
@@ -77,7 +77,7 @@ public class AdminController extends BaseController {
                 .collect(Collectors.toList());
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.TEXT_HTML);
-        String html = mustache.compileMultipleUsers("MultipleUsers", result, "by ids");
+        String html = mustache.compileMultipleUsers(result, "by ids");
         return new ResponseEntity<>(html, headers, HttpStatus.OK);
     }
 
@@ -89,7 +89,7 @@ public class AdminController extends BaseController {
                 .collect(Collectors.toList());
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.TEXT_HTML);
-        String html = mustache.compileMultipleUsers("MultipleUsers", result, "by emails");
+        String html = mustache.compileMultipleUsers(result, "by emails");
         return new ResponseEntity<>(html, headers, HttpStatus.OK);
     }
 
@@ -101,7 +101,7 @@ public class AdminController extends BaseController {
                 .collect(Collectors.toList());
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.TEXT_HTML);
-        String html = mustache.compileMultipleUsers("MultipleUsers", result, "by usernames");
+        String html = mustache.compileMultipleUsers(result, "by usernames");
         return new ResponseEntity<>(html, headers, HttpStatus.OK);
     }
 
@@ -113,7 +113,7 @@ public class AdminController extends BaseController {
                 .collect(Collectors.toList());
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.TEXT_HTML);
-        String html = mustache.compileMultipleUsers("MultipleUsers", result, "by subscribed value");
+        String html = mustache.compileMultipleUsers(result, "by subscribed value");
         return new ResponseEntity<>(html, headers, HttpStatus.OK);
     }
 
