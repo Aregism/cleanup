@@ -22,22 +22,38 @@ public class MustacheHelper {
         this.mustacheFactory = mustacheFactory;
     }
 
-    public String compileSingleUser(String name, UserResponse response) {
-        Mustache mustache = mustacheFactory.compile("%s/%s.mustache".formatted(Constants.VIEW_DIRECTORY, name));
+    public String compileSingleUser(UserResponse response) {
+        Mustache mustache = mustacheFactory.compile("%s/admin/%s.mustache".formatted(Constants.VIEW_DIRECTORY, "SingleUser"));
         StringWriter writer = new StringWriter();
         response.getAuthorities().sort(Comparator.comparing(Authority::getId));
         mustache.execute(writer, response);
         return writer.toString();
     }
 
-    public String compileMultipleUsers(String name, List<UserResponse> responses, String caller) {
-        Mustache mustache = mustacheFactory.compile("%s/%s.mustache".formatted(Constants.VIEW_DIRECTORY, name));
+    public String compileMultipleUsers(List<UserResponse> responses, String caller) {
+        Mustache mustache = mustacheFactory.compile("%s/admin/%s.mustache".formatted(Constants.VIEW_DIRECTORY, "MultipleUsers"));
         StringWriter writer = new StringWriter();
         responses.forEach(response -> response.getAuthorities().sort(Comparator.comparing(Authority::getId)));
         Map<String, Object> context = new HashMap<>();
         context.put("link", Constants.BASE_URL.concat("/admin/id"));
         context.put("filter", caller);
         context.put("responses", responses);
+        mustache.execute(writer, context);
+        return writer.toString();
+    }
+
+    public String compileHome() {
+        Mustache mustache = mustacheFactory.compile("%s/base/%s.mustache".formatted(Constants.VIEW_DIRECTORY, "Home"));
+        StringWriter writer = new StringWriter();
+        Map<String, Object> context = new HashMap<>();
+        mustache.execute(writer, context);
+        return writer.toString();
+    }
+
+    public String compileLogin() {
+        Mustache mustache = mustacheFactory.compile("%s/base/%s.mustache".formatted(Constants.VIEW_DIRECTORY, "Login"));
+        StringWriter writer = new StringWriter();
+        Map<String, Object> context = new HashMap<>();
         mustache.execute(writer, context);
         return writer.toString();
     }
