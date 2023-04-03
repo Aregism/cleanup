@@ -22,4 +22,10 @@ public interface MailService {
 
     @Async
     void resendAccountVerification(User user, long token);
+
+    @Async
+    void sendWarnAccountLock(User user);
+
+    @Async
+    void sendAccountLocked(User user);
 }

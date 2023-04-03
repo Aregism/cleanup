@@ -75,6 +75,21 @@ public class MailServiceImpl implements MailService {
 
     }
 
+    public void sendWarnAccountLock(User user) {
+        Map<String, Object> context = new HashMap<>();
+        context.put("name", resolveRecipientName(user));
+        context.put("link", Constants.BASE_URL + "/users/pw-change-request");
+        send(context, user.getEmail(), "Account lock warning", "WarnAccountLock");
+    }
+
+    @Override
+    public void sendAccountLocked(User user) {
+        Map<String, Object> context = new HashMap<>();
+        context.put("name", resolveRecipientName(user));
+        context.put("link", Constants.BASE_URL + "/users/pw-change-request");
+        send(context, user.getEmail(), "Account locked", "AccountLocked");
+    }
+
     private String resolveRecipientName(User user) {
         if (user.isCustomUsername()) {
             return user.getUsername();
