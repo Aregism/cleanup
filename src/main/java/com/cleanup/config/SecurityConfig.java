@@ -1,5 +1,8 @@
 package com.cleanup.config;
 
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -7,12 +10,17 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
+
+import java.io.IOException;
+
 
 @Configuration
 @EnableWebSecurity
-public class SecurityConfig{
+public class SecurityConfig {
 
     public SecurityConfig(CustomUserDetailsService userDetailsService, PasswordEncoder passwordEncoder) {
         this.userDetailsService = userDetailsService;
@@ -28,15 +36,30 @@ public class SecurityConfig{
                 .csrf().disable()
                 .authorizeHttpRequests()
                 .requestMatchers(HttpMethod.GET,
-                        "/users/pw-confirm/**")
+                        "/users/pw-confirm/**",
+                        "/home",
+                        "/login"
+                )
                 .permitAll()
                 .requestMatchers(HttpMethod.POST,
                         "/users/register",
-                        "/users/pw-change-request"
-                        )
+                        "/users/pw-change-request",
+                        "/do-login"
+                )
                 .permitAll()
-                .anyRequest()
-                .authenticated()
+                .anyRequest().authenticated()
+                .and()
+                .formLogin()
+                .loginPage("/login")
+                .loginProcessingUrl("/do-login")
+                .usernameParameter("login")
+                .passwordParameter("password")
+                .successHandler(new SavedRequestAwareAuthenticationSuccessHandler() {
+                    @Override
+                    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws ServletException, IOException {
+                        super.onAuthenticationSuccess(request, response, authentication);
+                    }
+                })
                 .and()
                 .httpBasic();
         return http.build();
@@ -48,5 +71,4 @@ public class SecurityConfig{
                 .userDetailsService(userDetailsService)
                 .passwordEncoder(passwordEncoder);
     }
-
 }
