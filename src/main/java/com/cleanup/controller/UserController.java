@@ -10,6 +10,7 @@ import com.cleanup.utility.exceptions.NotValidException;
 import com.cleanup.utility.helpers.MustacheHelper;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -30,6 +31,12 @@ public class UserController extends BaseController {
     public ResponseEntity<Void> register(@RequestBody UserRequest userRequest) throws DuplicateException, NotValidException {
         userService.save(userMapper.map(userRequest, User.class));
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/pw-change-request")
+    public ResponseEntity<String> requestPasswordChange() {
+        // TODO: 31-Mar-23  create a view for the request password change
+        return null;
     }
 
     @PostMapping("/pw-change-request")

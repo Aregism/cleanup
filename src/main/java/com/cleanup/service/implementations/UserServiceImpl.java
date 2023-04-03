@@ -225,6 +225,34 @@ public class UserServiceImpl implements UserService {
         log.info(status ? "Users unbanned: " + emails : "Users banned: " + emails);
     }
 
+    public boolean doLogin(String login, String password) throws NotFoundException, NotValidException {
+        User user;
+        user = login.contains("@") ? userRepository.findByEmail(login) : userRepository.findByUsername(login);
+        if (user == null) {
+            log.warn("User not found with login: " + login);
+            throw new NotFoundException("User not found");
+        }
+        if (user.isAccountLocked()) {
+            throw new NotValidException("Account locked");
+        }
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            user.setFailedLoginAttempts((byte) (user.getFailedLoginAttempts() + 1));
+            if (user.getFailedLoginAttempts() == 3) {
+                mailService.sendWarnAccountLock(user);
+            }
+            if (user.getFailedLoginAttempts() == 5) {
+                mailService.sendAccountLocked(user);
+                user.setAccountLocked(true);
+            }
+            userRepository.save(user);
+            return false;
+        }
+        user.setFailedLoginAttempts((byte) 0);
+        user.setLatestLogin(LocalDateTime.now());
+        userRepository.save(user);
+        return true;
+    }
+
     private void validatePassword(String password) throws NotValidException {
         if (password.length() < 8) {
             throw new NotValidException("Password must contain at least 8 characters.");
@@ -237,6 +265,10 @@ public class UserServiceImpl implements UserService {
         if (!email.matches(EMAIL_REGEX)) {
             log.error("Invalid email: " + email);
             throw new NotValidException("Invalid email. Did not match regex");
+        }
+        if (!username.matches(USERNAME_REGEX)) {
+            log.error("Invalid username: " + email);
+            throw new NotValidException("Invalid username. Did not match regex");
         }
         if (findByEmail(email) != null) {
             log.error("Duplicate email.");

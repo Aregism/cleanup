@@ -51,4 +51,6 @@ public interface UserService {
     void updateBannedByIdBulk(List<Long> ids, boolean status) throws NotFoundException;
 
     void updateBannedByEmailBulk(List<String> emails, boolean status);
+
+    boolean doLogin(String login, String password) throws NotFoundException, NotValidException;
 }

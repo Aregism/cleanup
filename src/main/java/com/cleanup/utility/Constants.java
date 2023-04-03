@@ -37,6 +37,7 @@ public class Constants {
 
     // Regexes
     public static String EMAIL_REGEX = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
+    public static String USERNAME_REGEX = "^[a-zA-Z0-9_-]{3,20}$";
     public static String PASSWORD_REGEX = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).+$";
 
     // Directory constants
